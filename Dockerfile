@@ -7,8 +7,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="$PNPM_HOME:$PATH:/home/claude/.local/bin"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl wget git vim gosu ca-certificates build-essential \
-    python3 python3-pip python3-venv watchdog \
+    curl wget git vim gosu ca-certificates build-essential procps\
+    watchdog python3 python3-pip python3-venv python3-watchdog jq\
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p -m 755 /etc/apt/keyrings \
@@ -32,10 +32,6 @@ USER claude
 # Install Claude
 RUN pnpm add -g vite @anthropic-ai/claude-code
 
-# User Prompts
-COPY USER.md /home/claude/.claude/USER.md
-RUN echo "@USER.md" >> /home/claude/.claude/CLAUDE.md
-
 # Install RTK (rust token killer)
 RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh | sh
 RUN rtk init -g --auto-patch
@@ -53,6 +49,17 @@ RUN uv tool install codemap --from https://github.com/AZidan/codemap.git
 
 # Install Context7 (language reference etc)
 RUN claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
+
+COPY init/USER.md /home/claude/.claude/USER.md
+RUN echo "@USER.md" >> /home/claude/.claude/CLAUDE.md
+COPY init/CODEMAP.md /home/claude/.claude/CODEMAP.md
+RUN echo "@CODEMAP.md" >> /home/claude/.claude/CLAUDE.md
+COPY init/settings.json /home/claude/.claude/settings.json
+
+COPY init/skills /home/claude/.claude/skills
+COPY init/hooks /home/claude/.claude/hooks
+COPY init/agents /home/claude/.claude/agents
+COPY codemap-show /home/claude/.local/bin/codemap-show
 
 USER root
 WORKDIR /app

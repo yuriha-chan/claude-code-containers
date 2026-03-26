@@ -1,0 +1,6 @@
+#!/bin/bash
+for x in $@; do
+  if [ -f $x ]; then
+    codemap show $x
+  fi
+done

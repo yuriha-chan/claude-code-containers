@@ -23,6 +23,8 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+. .env
+
 cat > "$WORKSPACE_DIR/.env" <<EOF
 CONTAINER_NAME=claude-code-$WORKSPACE_NAME
 WORKSPACE_VOLUME=claude-code-$WORKSPACE_NAME-workspace

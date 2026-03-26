@@ -1,15 +1,9 @@
----
-name: codemap
-description: Explore files. Find definitions for classes, functions, methods, types etc. Understand the file structure. Locate line numbers. Locate code segments by name.
-allowed-tools: Read, Bash, Glob, Grep
-user-invocable: true
----
-
 # CodeMap - Codebase Structural Index
 `codemap` is an effcient tool to search and explore the code.
 
-## When to Use This Skill
-Understand the file structure. Locate relevant sections in the code.
+## When to Use
+Understand the file structure. Locate relevant sections in the code. Locate line numbers. Locate code segments by name.
+When I want to Read the entire file, I consider using `codemap find` or `codemap-show` first, because narrowing down the relevant lines is more token-efficient.
 
 ## Example
 1. **Search before scanning**: Always use `codemap find` instead of grep.
@@ -25,10 +19,10 @@ src/services/user.ts:15-189 [class] UserService
 I understand:
 class UserService is defined in L15-189 of src/services/user.ts
 
-2. **Explore structure**: Use `codemap show` to understand file layout.
+2. **Explore file structure**: Use `codemap-show` to understand file layout.
 I run:
 ```bash
-codemap show src/services/user.ts
+codemap-show src/services/user.ts
 ```
 It outputs:
 ```
@@ -51,11 +45,13 @@ getUser takes string argument `userId` and return Promise<User>. It is defined i
 createUser takes CreateUserDto argument `data` and return Promise<User>. It is defined in L100-145.
 There are no other method in UserService.
 
+**Important**: `codemap-show` does not recognize directory arguments. `codemap-show` can take one or multiple files or wildcards (`codemap-show src/*.ts`). `codemap-show` on all files (`find -f . | xargs codemap-show`) can be very lengthy, so it should be avoided in a large project. `codemap-show` can show the outline of css files and markdown documents too. For show command, use hyphens (`codemap-show`), not without it (`codemap show`).
+
 ## Best Practices:
 1. **Search before scanning**: Always use `codemap find` first, before grep.
-2. **Refine context**: When I find occurences by grep, I determine how many lines before and after the occurence by invoking `codemap show` data.
-2. **Remember file structure**: I remember the `codemap show` data. I recall these data when I need later.
-3. **Run codemap again after edits**: When I want to read the symbol definitions based on remembered line numbers, I check if I have edited the relevant files after I acquired the line numbers. If so, I will run `codemap find` or `codemap show` again to ensure the fresh line numbers.
+2. **Refine context**: When I find occurences by grep, I determine how many lines before and after the occurence by invoking `codemap-show` data.
+3. **Remember file structure**: I remember the `codemap-show` data. I recall these data when I need later.
+4. **Run codemap again after edits**: When I want to read the symbol definitions based on remembered line numbers, I check if I have edited the relevant files after I acquired the line numbers. If so, I will run `codemap find` or `codemap-show` again to ensure the fresh line numbers.
 
 ## Quick Reference
 
@@ -68,8 +64,12 @@ codemap find "handle" --type method
 codemap find "User" --type class
 codemap find "Config" --type interface
 
+# Fuzzy search
+codemap find -f "account"
+
 # Show file structure with all symbols
-codemap show path/to/file.ts
+codemap-show path/to/file.ts
+codemap-show path/to/*.ts
 
 # Check if index is up-to-date
 codemap validate
@@ -77,7 +77,6 @@ codemap validate
 # View index statistics
 codemap stats
 ```
-
 
 ## Symbol Types
 
@@ -91,23 +90,6 @@ codemap stats
 | `interface` | TypeScript interface |
 | `type` | TypeScript type alias |
 | `enum` | Enum declaration |
-
-## Setup
-When I create a workspace, I will run the following if `.codemap` directory is not present.
-```bash
-codemap init .
-```
-
-### Start Watch Mode
-I start watch mode in the background to keep the index automatically updated:
-```bash
-codemap watch . &
-```
-
-To stop watch mode later:
-```bash
-pkill -f "codemap watch"
-```
 
 ## Example Session
 
