@@ -45,7 +45,7 @@ RUN pnpm install -g \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install codemap mcp (token-economical search)
-RUN uv tool install codemap --from https://github.com/AZidan/codemap.git
+RUN uv tool install codemap --from https://github.com/AZidan/codemap.git --with codemap[all]
 
 # Install Context7 (language reference etc)
 RUN claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
