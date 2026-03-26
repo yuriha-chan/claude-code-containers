@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+if [ $# -ne 1 ]; then
+    echo "usage: $0 <workspace>"
+    exit 1
+fi
+
+WORKSPACE_NAME=$1
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$BASE_DIR/workspaces/$WORKSPACE_NAME"
+
+if [ -d "$WORKSPACE_DIR" ]; then
+    echo "Workspace '$WORKSPACE_NAME' already exists."
+    exit 1
+fi
+
+mkdir -p "$WORKSPACE_DIR"
+
+cp "$BASE_DIR/docker-compose.tmpl.yml" "$WORKSPACE_DIR/docker-compose.yml"
+if [ $# -ne 1 ]; then
+    echo "usage: $0 <workspace>"
+    exit 1
+fi
+
+cat > "$WORKSPACE_DIR/.env" <<EOF
+CONTAINER_NAME=claude-code-$WORKSPACE_NAME
+WORKSPACE_VOLUME=claude-code-$WORKSPACE_NAME-workspace
+CLAUDE_CONFIG_VOLUME=claude-code-$WORKSPACE_NAME-claude-config
+RTK_DATA_VOLUME=claude-code-$WORKSPACE_NAME-rtk-data
+
+ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+CONTEXT7_API_KEY=${CONTEXT7_API_KEY}
+GITHUB_TOKEN=${GITHUB_TOKEN}
+ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL}
+ANTHROPIC_MODEL=${ANTHROPIC_MODEL}
+ANTHROPIC_SMALL_FAST_MODEL=${ANTHROPIC_SMALL_FAST_MODEL}
+EOF
+
+cp "$BASE_DIR/docker-compose.tmpl.yml" "$WORKSPACE_DIR/docker-compose.yml"
