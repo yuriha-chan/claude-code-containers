@@ -1,5 +1,6 @@
 FROM node:20-bookworm-slim
 
+ENV PNPM_HOME="/home/claude/.local/share/pnpm"
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
@@ -7,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget git vim gosu ca-certificates build-essential \
-    python3 python3-pip python3-venv \
+    python3 python3-pip python3-venv watchdog \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p -m 755 /etc/apt/keyrings \
@@ -19,23 +20,21 @@ RUN mkdir -p -m 755 /etc/apt/keyrings \
 	&& apt install gh -y \
   && rm -rf /var/lib/apt/lists/*
 
-ENV PNPM_HOME="/home/claude/.local/share/pnpm"
-
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-RUN useradd -m -s /bin/bash claude
-
-RUN chown claude:claude /app
 RUN corepack enable pnpm
 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Setup User directory
+RUN useradd -m -s /bin/bash claude
 USER claude
 
 # Install Claude
 RUN pnpm add -g vite @anthropic-ai/claude-code
 
 # User Prompts
-RUN mkdir -p .claude
-COPY USER.md .claude/USER.md
+COPY USER.md /home/claude/.claude/USER.md
+RUN echo "@USER.md" >> /home/claude/.claude/CLAUDE.md
 
 # Install RTK (rust token killer)
 RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh | sh
@@ -46,14 +45,16 @@ RUN pnpm install -g \
     @modelcontextprotocol/server-github \
     && npm cache clean --force
 
+# Install uv (Python package manager)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
 # Install codemap mcp (token-economical search)
 RUN uv tool install codemap --from https://github.com/AZidan/codemap.git
 
 # Install Context7 (language reference etc)
 RUN claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
 
+USER root
 WORKDIR /app
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
